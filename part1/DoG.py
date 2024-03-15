@@ -36,16 +36,14 @@ class Difference_of_Gaussian(object):
                 gaussian_imgs.append(gaussian_img)
                 image_path = f"DoG_{octave}-{i%5}.png"
 
+                # Step 2: Subtract 2 neighbor images to get DoG images (4 images per octave, 2 octave in total)
+                # - Function: cv2.subtract(second_image, first_image)
                 dog_img = gaussian_imgs[i] - gaussian_imgs[i - 1]
                 max = np.max(dog_img)
                 min = np.min(dog_img)
-                n_dog_img = (max - dog_img) / (dog_img - min) * 255
+                n_dog_img = (max - dog_img) / (max - min) * 255
                 dog_imgs.append(n_dog_img)
                 cv2.imwrite(image_path, n_dog_img)
-
-        exit()
-        #         # Step 2: Subtract 2 neighbor images to get DoG images (4 images per octave, 2 octave in total)
-        #         # - Function: cv2.subtract(second_image, first_image)
 
         #     # Step 3: Thresholding the value and Find local extremum (local maximun and local minimum)
         #     #         Keep local extremum as a keypoint
