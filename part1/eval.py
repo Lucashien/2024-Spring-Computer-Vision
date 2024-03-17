@@ -25,7 +25,8 @@ def main():
 
     # read GT
     keypoints_gt = np.load(args.gt_path)
-    
+    # print(keypoints_gt)
+    # exit()
     if keypoints.shape[0] != keypoints_gt.shape[0]:
         print('[Error] Number of KeyPoints mismatches. Yours: %d, GT: %d'%
               (keypoints.shape[0], keypoints_gt.shape[0]))
