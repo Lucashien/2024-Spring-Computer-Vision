@@ -6,9 +6,8 @@ np.set_printoptions(threshold=np.inf)
 # print(check)
 # exit()
 
+
 def normalize(img):
-    print(type(img))
-    np.set_printoptions(suppress=True)
     max = np.max(img)
     min = np.min(img)
     img = ((img - min) / (max - min)) * 255
@@ -40,29 +39,29 @@ class Difference_of_Gaussian(object):
                     (image.shape[1] // octave, image.shape[0] // octave),
                     interpolation=cv2.INTER_NEAREST,
                 )
-            
-            gaussian_imgs.append(image) # 原圖 or resize後的
-           
+
+            gaussian_imgs.append(image)  # 原圖 or resize後的
+
             for i in range(
                 len(gaussian_imgs), len(gaussian_imgs) + self.num_DoG_images_per_octave
-            ):  
-                gaussian_img = cv2.GaussianBlur(image, (0, 0), self.sigma**(i%5))
+            ):
+                gaussian_img = cv2.GaussianBlur(image, (0, 0), self.sigma ** (i % 5))
                 gaussian_imgs.append(gaussian_img)
                 image_path = f"DoG_{octave}-{i%5}.png"
 
                 # Step 2: Subtract 2 neighbor images to get DoG images (4 images per octave, 2 octave in total)
                 # - Function: cv2.subtract(second_image, first_image)
-                dog_img = cv2.subtract(gaussian_imgs[i],gaussian_imgs[i-1])
+                dog_img = cv2.subtract(gaussian_imgs[i], gaussian_imgs[i - 1])
                 # dog_img = normalize(dog_img)
-               
+
                 dog_imgs.append(dog_img)
-                np.save(image_path,dog_img)
+                np.save(image_path, dog_img)
                 cv2.imwrite(image_path, normalize(dog_img))
 
         # Step 3: Thresholding the value and Find local extremum (local maximun and local minimum)
-        #         Keep local extremum as a keypoint
-        keypoint = []
-        for i in range(1,len(dog_imgs)):
+        #         Keep local extremum as a keypoints
+        keypoints = []
+        for i in range(1, len(dog_imgs)):
             if i == 1 or i == 2 or i == 5 or i == 6:
                 for row in range(1, dog_imgs[i].shape[0]):
                     for col in range(1, dog_imgs[i].shape[1]):
@@ -73,32 +72,28 @@ class Difference_of_Gaussian(object):
                                 dog_imgs[i - 1][row - 1 : row + 2, col - 1 : col + 2],
                             ]
                         )
-                        
-                        if max >= self.threshold and max == dog_imgs[i][row][col]:
-                            # print(f"{i,row , col}")
-                            keypoint.append([i,row, col])
-                        if max == dog_imgs[i][row][col]:
-                            print(f"{i,row , col}")
 
+                        min = np.min(
+                            [
+                                dog_imgs[i + 1][row - 1 : row + 2, col - 1 : col + 2],
+                                dog_imgs[i][row - 1 : row + 2, col - 1 : col + 2],
+                                dog_imgs[i - 1][row - 1 : row + 2, col - 1 : col + 2],
+                            ]
+                        )
  
-        print(len(keypoint))
-        exit()
-        print(keypoint)
+                        if max > self.threshold and max == dog_imgs[i][row][col]:
+                            print(f"{i,row , col}")
+                            keypoints.append([row * (i//5+1), col * (i//5+1)])
+                        if abs(min) > self.threshold and abs(min) == abs(dog_imgs[i][row][col]):
+                            print(f"{i,row , col}")
+                            keypoints.append([row * (i//5+1), col * (i//5+1)])
 
-        # print(len(max))
+        keypoints =np.unique(np.array(keypoints),axis = 0)
+        
+        # print(keypoints)
+        print(len(keypoints))
+        
 
-        #     # Step 4: Delete duplicate keypoints
-        #     # - Function: np.unique
-        #     # uniques = np.unique(thresh_img)
-        #     # print(uniques)
-        #     # for unique in uniques:
-        #     #     unique_img = np.where(thresh_img == self.threshold, 0, thresh_img)
-
-        #     # image_list.append(unique_img)
-        #     # cv2.imwrite(image_path, unique_img)
-        #     # print(f"Saved Gaussian images to the following paths: {image_path}")
-        # exit()
         # # sort 2d-point by y, then by x
-        # keypoints = image_list
-        # keypoints = keypoints[np.lexsort((keypoints[:, 1], keypoints[:, 0]))]
-        # return keypoints
+        keypoints = keypoints[np.lexsort((keypoints[:, 1], keypoints[:, 0]))]
+        return keypoints
