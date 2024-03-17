@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--gt_jbf_path', default='./testdata/ex_gt_jbf.png', help='path to ground trut jbf image')
     args = parser.parse_args()
 
+
     img = cv2.imread(args.image_path)
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     guidance = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -29,7 +30,9 @@ def main():
     t0 = time.time()
     jbf_out = JBF.joint_bilateral_filter(img_rgb, guidance).astype(np.uint8)
     print('[Time] %.4f sec'%(time.time()-t0))
-    
+    np.save("./bf_out", bf_out)
+    np.save("./jbf_out", jbf_out)
+
     bf_gt = cv2.cvtColor(cv2.imread(args.gt_bf_path), cv2.COLOR_BGR2RGB)
     jbf_gt = cv2.cvtColor(cv2.imread(args.gt_jbf_path), cv2.COLOR_BGR2RGB)
     bf_error = np.sum(np.abs(bf_out.astype('int32')-bf_gt.astype('int32')))
