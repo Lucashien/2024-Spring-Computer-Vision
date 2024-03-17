@@ -7,6 +7,8 @@ np.set_printoptions(threshold=np.inf)
 # exit()
 
 def normalize(img):
+    print(type(img))
+    np.set_printoptions(suppress=True)
     max = np.max(img)
     min = np.min(img)
     img = ((img - min) / (max - min)) * 255
@@ -38,8 +40,8 @@ class Difference_of_Gaussian(object):
                     (image.shape[1] // octave, image.shape[0] // octave),
                     interpolation=cv2.INTER_NEAREST,
                 )
-
-            gaussian_imgs.append(image)
+            
+            gaussian_imgs.append(image) # 原圖 or resize後的
            
             for i in range(
                 len(gaussian_imgs), len(gaussian_imgs) + self.num_DoG_images_per_octave
@@ -51,16 +53,15 @@ class Difference_of_Gaussian(object):
                 # Step 2: Subtract 2 neighbor images to get DoG images (4 images per octave, 2 octave in total)
                 # - Function: cv2.subtract(second_image, first_image)
                 dog_img = cv2.subtract(gaussian_imgs[i],gaussian_imgs[i-1])
-                dog_img = normalize(dog_img)
+                # dog_img = normalize(dog_img)
                
                 dog_imgs.append(dog_img)
-                cv2.imwrite(image_path, dog_img)
+                np.save(image_path,dog_img)
+                cv2.imwrite(image_path, normalize(dog_img))
 
         # Step 3: Thresholding the value and Find local extremum (local maximun and local minimum)
         #         Keep local extremum as a keypoint
         keypoint = []
-        count_1 = 0
-        count_2 = 0
         for i in range(1,len(dog_imgs)):
             if i == 1 or i == 2 or i == 5 or i == 6:
                 for row in range(1, dog_imgs[i].shape[0]):
@@ -72,14 +73,14 @@ class Difference_of_Gaussian(object):
                                 dog_imgs[i - 1][row - 1 : row + 2, col - 1 : col + 2],
                             ]
                         )
-                        if max >= self.threshold :
-                            count_2+=1
-                        count_1+=1
+                        
                         if max >= self.threshold and max == dog_imgs[i][row][col]:
-                            print(f"{row , col , max}")
+                            # print(f"{i,row , col}")
                             keypoint.append([i,row, col])
-        print(f"total: {count_1}")
-        print(f"max >= self.threshold: {count_2}")
+                        if max == dog_imgs[i][row][col]:
+                            print(f"{i,row , col}")
+
+ 
         print(len(keypoint))
         exit()
         print(keypoint)
