@@ -2,8 +2,7 @@ import numpy as np
 import cv2
 
 np.set_printoptions(threshold=np.inf)
-
-
+    
 class Joint_bilateral_filter(object):
     def __init__(self, sigma_s, sigma_r):
         self.sigma_r = sigma_r
@@ -11,7 +10,7 @@ class Joint_bilateral_filter(object):
         self.wndw_size = 6 * sigma_s + 1
         self.pad_w = 3 * sigma_s
         self.offset = self.wndw_size // 2
-
+        self.Bilateral_Filter_vec = np.vectorize(self.Bilateral_Filter, signature='()->(n)')
         xq, yq = np.meshgrid(np.arange(self.wndw_size), np.arange(self.wndw_size))
         self.Gs = np.exp(
             (((self.wndw_size // 2 - xq) ** 2) + (self.wndw_size // 2 - yq) ** 2)
@@ -36,11 +35,16 @@ class Joint_bilateral_filter(object):
         self.padded_guidance = padded_guidance
         w, h, c = self.img.shape
         Ip_dash = self.img.astype(np.int32)
-
-        for row in range(w):
-            for col in range(h):
-                Ip_dash[row][col] = self.Bilateral_Filter(row, col)
         
+        coord = np.array([[{"x":i,"y":j} for j in range(w)] for i in range(h)])
+        coord = coord.reshape((w*h,1))
+
+        Ip_dash = self.Bilateral_Filter_vec(coord)
+        Ip_dash = Ip_dash.reshape((w,h,3))
+        # for row in range(w):
+        #     for col in range(h):
+        #         Ip_dash[row][col] = self.Bilateral_Filter(row, col)
+
         return np.clip(Ip_dash, 0, 255).astype(np.uint8)
 
     # tp tq 為 guidence 中 pq位置的強度值
@@ -60,7 +64,10 @@ class Joint_bilateral_filter(object):
         else:
             return np.exp(((Tp - Tq) ** 2) / (-2 * self.sigma_r**2))
 
-    def Bilateral_Filter(self, xp, yp):
+    def Bilateral_Filter(self, coord):
+        # print(coord)
+        xp = coord["x"]
+        yp = coord["y"]
         # xp, yp 是原圖
         xp_offset = xp + self.offset
         yp_offset = yp + self.offset
