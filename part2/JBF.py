@@ -1,21 +1,31 @@
 import numpy as np
 import cv2
+import time
 
 np.set_printoptions(threshold=np.inf)
-    
+
+
 class Joint_bilateral_filter(object):
     def __init__(self, sigma_s, sigma_r):
+        t0 = time.time()
+
         self.sigma_r = sigma_r
         self.sigma_s = sigma_s
         self.wndw_size = 6 * sigma_s + 1
         self.pad_w = 3 * sigma_s
         self.offset = self.wndw_size // 2
-        self.Bilateral_Filter_vec = np.vectorize(self.Bilateral_Filter, signature='()->(n)')
+        self.Bilateral_Filter_vec = np.vectorize(
+            self.Bilateral_Filter, signature="()->(n)"
+        )
         xq, yq = np.meshgrid(np.arange(self.wndw_size), np.arange(self.wndw_size))
         self.Gs = np.exp(
             (((self.wndw_size // 2 - xq) ** 2) + (self.wndw_size // 2 - yq) ** 2)
             / (-2 * self.sigma_s**2)
         )
+
+        self.sigma_r_dash = -2 * self.sigma_r**2
+
+
 
     def joint_bilateral_filter(self, img, guidance):
         BORDER_TYPE = cv2.BORDER_REFLECT
@@ -35,12 +45,15 @@ class Joint_bilateral_filter(object):
         self.padded_guidance = padded_guidance
         w, h, c = self.img.shape
         Ip_dash = self.img.astype(np.int32)
-        
-        coord = np.array([[{"x":i,"y":j} for j in range(w)] for i in range(h)])
-        coord = coord.reshape((w*h,1))
+        coord = np.array([[{"x": i, "y": j} for j in range(w)] for i in range(h)])
+        coord = coord.reshape((w * h, 1))
 
+        t0 = time.time()
         Ip_dash = self.Bilateral_Filter_vec(coord)
-        Ip_dash = Ip_dash.reshape((w,h,3))
+        Ip_dash = Ip_dash.reshape((w, h, 3))
+        print('[loop Time] %.4f sec'%(time.time()-t0))
+        
+
         # for row in range(w):
         #     for col in range(h):
         #         Ip_dash[row][col] = self.Bilateral_Filter(row, col)
@@ -50,19 +63,15 @@ class Joint_bilateral_filter(object):
     # tp tq 為 guidence 中 pq位置的強度值
     def Gr(self, Tp, Tq):
 
+        sum = (Tq - Tp) ** 2
         if len(self.guidance.shape) == 3:
-            Tp_r, Tp_g, Tp_b = Tp
-            # Tq_r, Tq_g, Tq_b = Tp
-            Tq_r = Tq[:, :, 0]
-            Tq_g = Tq[:, :, 1]
-            Tq_b = Tq[:, :, 2]
 
             return np.exp(
-                (((Tp_r - Tq_r) ** 2) + ((Tp_g - Tq_g) ** 2) + ((Tp_b - Tq_b) ** 2))
-                / (-2 * self.sigma_r**2)
+                (sum[:, :, 0] + sum[:, :, 1] + sum[:, :, 2]) / self.sigma_r_dash
             )
+
         else:
-            return np.exp(((Tp - Tq) ** 2) / (-2 * self.sigma_r**2))
+            return np.exp(sum / self.sigma_r_dash)
 
     def Bilateral_Filter(self, coord):
         # print(coord)
@@ -75,16 +84,18 @@ class Joint_bilateral_filter(object):
         Iq = self.padded_img[xp : xp + self.wndw_size, yp : yp + self.wndw_size]
         Tq = self.padded_guidance[xp : xp + self.wndw_size, yp : yp + self.wndw_size]
         Tp = self.padded_guidance[xp_offset][yp_offset]
-
+        
+        mul = self.Gs * self.Gr(Tp, Tq)
+        
         numerator = np.array(
             [
-                np.sum(self.Gs * self.Gr(Tp, Tq) * Iq[:, :, 0]),
-                np.sum(self.Gs * self.Gr(Tp, Tq) * Iq[:, :, 1]),
-                np.sum(self.Gs * self.Gr(Tp, Tq) * Iq[:, :, 2]),
+                np.sum(mul * Iq[:, :, 0]),
+                np.sum(mul * Iq[:, :, 1]),
+                np.sum(mul * Iq[:, :, 2]),
             ]
         )
 
-        denominator = np.sum(self.Gs * self.Gr(Tp, Tq))
+        denominator = np.sum(mul)
 
         output = (numerator / denominator).astype(np.int32)
 
