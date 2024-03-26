@@ -36,15 +36,15 @@ class Joint_bilateral_filter(object):
 
         w, h, c = img.shape
  
-        Ip_dash = img.astype(np.int32)
         numerator, denominator = 0, 0
+        is_gray = len(guidance.shape) == 3
         for row in range(self.wndw_size):
             for col in range(self.wndw_size):
                 # (Tp - Tq) ** 2
                 I_diff = (guidance - padded_guidance[row : row + h, col : col + w]) ** 2
                 Iq = padded_img[row : row + h, col : col + w]
 
-                if len(I_diff.shape) == 3:
+                if is_gray:
                     Gr = np.exp(
                         self.sigma_r_dash
                         * (I_diff[:, :, 0] + I_diff[:, :, 1] + I_diff[:, :, 2])
@@ -65,6 +65,5 @@ class Joint_bilateral_filter(object):
                 denominator += np.stack([mul, mul, mul], axis=-1)
 
         Ip_dash = (numerator / denominator).astype(np.int32)
-        print(Ip_dash)
 
         return np.clip(Ip_dash, 0, 255).astype(np.uint8)
