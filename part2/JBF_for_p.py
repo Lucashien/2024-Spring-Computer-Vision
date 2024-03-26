@@ -46,8 +46,8 @@ class Joint_bilateral_filter(object):
         w, h, c = self.img.shape
         Ip_dash = self.img.astype(np.int32)
 
-        for row in range(19):
-            for col in range(19):
+        for row in range(h):
+            for col in range(w):
                 Ip_dash[row][col] = self.Bilateral_Filter(row, col)
         Ip_dash = Ip_dash.reshape((w, h, 3))
 
