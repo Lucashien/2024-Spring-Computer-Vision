@@ -30,7 +30,7 @@ class Difference_of_Gaussian(object):
         dog_imgs = []
         gaussian_imgs = []
         for octave in range(1, self.num_octaves + 1):
-            print(f"octave = {octave}")
+            # print(f"octave = {octave}")
 
             if octave == 2:
                 image = gaussian_imgs[-1]
@@ -82,16 +82,16 @@ class Difference_of_Gaussian(object):
                         )
  
                         if max > self.threshold and max == dog_imgs[i][row][col]:
-                            print(f"{i,row , col}")
+                            # print(f"{i,row , col}")
                             keypoints.append([row * (i//5+1), col * (i//5+1)])
                         if abs(min) > self.threshold and abs(min) == abs(dog_imgs[i][row][col]):
-                            print(f"{i,row , col}")
+                            # print(f"{i,row , col}")
                             keypoints.append([row * (i//5+1), col * (i//5+1)])
 
         keypoints =np.unique(np.array(keypoints),axis = 0)
         
         # print(keypoints)
-        print(len(keypoints))
+        # print(len(keypoints))
         
 
         # # sort 2d-point by y, then by x

@@ -14,14 +14,16 @@ class Joint_bilateral_filter(object):
         self.wndw_size = 6 * sigma_s + 1
         self.pad_w = 3 * sigma_s
         self.offset = self.wndw_size // 2
-        self.sigma_r_dash = -2 * self.sigma_r**2
-
+        self.Bilateral_Filter_vec = np.vectorize(
+            self.Bilateral_Filter, signature="()->(n)"
+        )
         xq, yq = np.meshgrid(np.arange(self.wndw_size), np.arange(self.wndw_size))
         self.Gs = np.exp(
             (((self.wndw_size // 2 - xq) ** 2) + (self.wndw_size // 2 - yq) ** 2)
             / (-2 * self.sigma_s**2)
         )
 
+        self.sigma_r_dash = -2 * self.sigma_r**2
 
 
 
@@ -44,8 +46,8 @@ class Joint_bilateral_filter(object):
         w, h, c = self.img.shape
         Ip_dash = self.img.astype(np.int32)
 
-        for row in range(w):
-            for col in range(h):
+        for row in range(19):
+            for col in range(19):
                 Ip_dash[row][col] = self.Bilateral_Filter(row, col)
         Ip_dash = Ip_dash.reshape((w, h, 3))
 
@@ -65,6 +67,7 @@ class Joint_bilateral_filter(object):
             return np.exp(sum / self.sigma_r_dash)
 
     def Bilateral_Filter(self, xp,yp):
+        
         xp_offset = xp + self.offset
         yp_offset = yp + self.offset
 
