@@ -34,17 +34,17 @@ class Joint_bilateral_filter(object):
         guidance = (guidance / 255).astype(np.float64)
         padded_guidance = (padded_guidance / 255).astype(np.float64)
 
-        w, h, c = img.shape
+        h, w, c = img.shape
  
         numerator, denominator = 0, 0
-        is_gray = len(guidance.shape) == 3
+        is_gray = guidance.ndim == 2
         for row in range(self.wndw_size):
             for col in range(self.wndw_size):
                 # (Tp - Tq) ** 2
                 I_diff = (guidance - padded_guidance[row : row + h, col : col + w]) ** 2
                 Iq = padded_img[row : row + h, col : col + w]
 
-                if is_gray:
+                if not is_gray:
                     Gr = np.exp(
                         self.sigma_r_dash
                         * (I_diff[:, :, 0] + I_diff[:, :, 1] + I_diff[:, :, 2])
