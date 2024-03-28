@@ -55,7 +55,6 @@ class Difference_of_Gaussian(object):
                 # dog_img = normalize(dog_img)
 
                 dog_imgs.append(dog_img)
-                np.save(image_path, dog_img)
                 cv2.imwrite(image_path, normalize(dog_img))
 
         # Step 3: Thresholding the value and Find local extremum (local maximun and local minimum)
@@ -82,18 +81,12 @@ class Difference_of_Gaussian(object):
                         )
  
                         if max > self.threshold and max == dog_imgs[i][row][col]:
-                            # print(f"{i,row , col}")
                             keypoints.append([row * (i//5+1), col * (i//5+1)])
                         if abs(min) > self.threshold and abs(min) == abs(dog_imgs[i][row][col]):
-                            # print(f"{i,row , col}")
                             keypoints.append([row * (i//5+1), col * (i//5+1)])
 
         keypoints =np.unique(np.array(keypoints),axis = 0)
         
-        # print(keypoints)
-        # print(len(keypoints))
-        
-
         # # sort 2d-point by y, then by x
         keypoints = keypoints[np.lexsort((keypoints[:, 1], keypoints[:, 0]))]
         return keypoints
