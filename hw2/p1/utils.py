@@ -6,9 +6,23 @@ from cyvlfeat.sift.dsift import dsift
 from cyvlfeat.kmeans import kmeans
 from scipy.spatial.distance import cdist
 
-CAT = ['Kitchen', 'Store', 'Bedroom', 'LivingRoom', 'Office',
-       'Industrial', 'Suburb', 'InsideCity', 'TallBuilding', 'Street',
-       'Highway', 'OpenCountry', 'Coast', 'Mountain', 'Forest']
+CAT = [
+    "Kitchen",
+    "Store",
+    "Bedroom",
+    "LivingRoom",
+    "Office",
+    "Industrial",
+    "Suburb",
+    "InsideCity",
+    "TallBuilding",
+    "Street",
+    "Highway",
+    "OpenCountry",
+    "Coast",
+    "Mountain",
+    "Forest",
+]
 
 CAT2ID = {v: k for k, v in enumerate(CAT)}
 
@@ -17,18 +31,19 @@ CAT2ID = {v: k for k, v in enumerate(CAT)}
 ###### use TINY_IMAGE as features ######
 ########################################
 
+
 ###### Step 1-a
 def get_tiny_images(img_paths):
-    '''
-    Input : 
+    """
+    Input :
         img_paths (N) : list of string of image paths
     Output :
-        tiny_img_feats (N, d) : ndarray of resized and then vectorized 
+        tiny_img_feats (N, d) : ndarray of resized and then vectorized
                                 tiny images
     NOTE :
         1. N is the total number of images
         2. if the images are resized to 16x16, d would be 256
-    '''
+    """
 
     #################################################################
     # TODO:                                                         #
@@ -39,13 +54,13 @@ def get_tiny_images(img_paths):
     #       or you can first crop the center square portion out of  #
     #       each image.                                             #
     #    2. flatten and normalize the resized image.                #
-    #################################################################    
+    #################################################################
     tiny_img_feats = []
     for img_path in img_paths:
-       img = Image.open(img_path)
-       img = img.resize((16,16))
-       flat_img = np.array(img).flatten()
-       tiny_img_feats.append(flat_img)
+        img = Image.open(img_path)
+        img = img.resize((16, 16))
+        flat_img = np.array(img).flatten()
+        tiny_img_feats.append(flat_img)
 
     #################################################################
     #                        END OF YOUR CODE                       #
@@ -53,25 +68,27 @@ def get_tiny_images(img_paths):
 
     return tiny_img_feats
 
+
 #########################################
 ###### FEATURE UTILS               ######
 ###### use BAG_OF_SIFT as features ######
 #########################################
 
+
 ###### Step 1-b-1
 def build_vocabulary(img_paths, vocab_size=400):
-    '''
-    Input : 
+    """
+    Input :
         img_paths (N) : list of string of image paths (training)
         vocab_size : number of clusters desired
     Output :
         vocab (vocab_size, sift_d) : ndarray of clusters centers of k-means
     NOTE :
         1. sift_d is 128
-        2. vocab_size is up to you, larger value will works better (to a point) 
+        2. vocab_size is up to you, larger value will works better (to a point)
            but be slower to compute, you can set vocab_size in p1.py
-    '''
-    
+    """
+
     ##################################################################################
     # TODO:                                                                          #
     # To build vocabularies from training images, you can follow below steps:        #
@@ -104,25 +121,28 @@ def build_vocabulary(img_paths, vocab_size=400):
     features = []
     for img_path in img_paths:
         img = np.array(Image.open(img_path))
-        _frames, words = dsift(img, step=[15, 15], fast=True)
-        random_idxes = np.random.choice(len(words), len(words)//2, replace=False)
-        
-        if words is not None:
+        _frames, descriptors = dsift(img, step=[4, 4], fast=True)
+        random_idxes = np.random.choice(
+            len(descriptors), len(descriptors) // 2, replace=False
+        )
+
+        if descriptors is not None:
             for idx in random_idxes:
-                features.append(words[idx])
-    
-    features = np.array(features).astype('float32')
-    vocab = kmeans(features,num_centers = vocab_size)
-    
+                features.append(descriptors[idx])
+
+    features = np.array(features).astype("float32")
+    vocab = kmeans(features, num_centers=vocab_size)
+
     ##################################################################################
     #                                END OF YOUR CODE                                #
     ##################################################################################
-    
+
     return vocab
+
 
 ###### Step 1-b-2
 def get_bags_of_sifts(img_paths, vocab):
-    '''
+    """
     Input :
         img_paths (N) : list of string of image paths
         vocab (vocab_size, sift_d) : ndarray of clusters centers of k-means
@@ -132,11 +152,11 @@ def get_bags_of_sifts(img_paths, vocab):
                            of vocabularies (cluster centers) on this image
     NOTE :
         1. d is vocab_size here
-    '''
+    """
 
     ############################################################################
     # TODO:                                                                    #
-    # To get bag of SIFT words (centroids) of each image, you can follow below #
+    # To get bag of SIFT descriptors (centroids) of each image, you can follow below #
     # steps:                                                                   #
     #   1. for each loaded image, get its 128-dim SIFT features (descriptors)  #
     #      in the same way you did in build_vocabulary()                       #
@@ -157,39 +177,80 @@ def get_bags_of_sifts(img_paths, vocab):
     ############################################################################
 
     img_feats = []
+    feats = []
+
+    for img_path in img_paths:
+        img = np.array(Image.open(img_path))
+        _frames, descriptors = dsift(img, step=[4, 4], fast=True)
+
+        # 找到descriptors和vocab都是2d矩陣 -> 計算每個點之間的距離
+        # 如果descriptors.shape = (10,128), vocab.shpae = (7,128)
+        # 就會有(10,7)個距離，可以想成 descriptor的10個點，每個點都要跟vocab的七個座標做對比
+        dist = cdist(descriptors, vocab)
+
+        # 沿用剛剛的想法：descriptor的10個點，每個點都要跟vocab的7個座標做對比
+        # 那麼descriptor的每個點都會產出相對應得7個距離，最小值從那7選
+        # 所以總共會有10個最短距離
+        min_dist = np.argmin(dist, axis=1)
+
+        # hist = 每個區間有幾個
+        # bin (_)  = 區間 (由vocab決定區間)
+        # 目標：求出每個區間的數量
+        hists, _ = np.histogram(min_dist, bins=len(vocab))
+
+        # normalized
+        sum = np.sum(hists)
+        norm_hists = [h / sum for h in hists]
+        img_feats.append(norm_hists)
 
     ############################################################################
     #                                END OF YOUR CODE                          #
     ############################################################################
-    
-    return img_feats
+
+    return np.array(img_feats)
+
 
 ################################################
 ###### CLASSIFIER UTILS                   ######
 ###### use NEAREST_NEIGHBOR as classifier ######
 ################################################
 
+
 ###### Step 2
 def nearest_neighbor_classify(train_img_feats, train_labels, test_img_feats):
-    '''
-    Input : 
+    """
+    Input :
         train_img_feats (N, d) : ndarray of feature of training images
-        train_labels (N) : list of string of ground truth category for each 
+        train_labels (N) : list of string of ground truth category for each
                            training image
         test_img_feats (M, d) : ndarray of feature of testing images
     Output :
-        test_predicts (M) : list of string of predict category for each 
+        test_predicts (M) : list of string of predict category for each
                             testing image
     NOTE:
         1. d is the dimension of the feature representation, depending on using
            'tiny_image' or 'bag_of_sift'
         2. N is the total number of training images
         3. M is the total number of testing images
-    '''
+    """
 
-    CAT = ['Kitchen', 'Store', 'Bedroom', 'LivingRoom', 'Office',
-           'Industrial', 'Suburb', 'InsideCity', 'TallBuilding', 'Street',
-           'Highway', 'OpenCountry', 'Coast', 'Mountain', 'Forest']
+    CAT = [
+        "Kitchen",
+        "Store",
+        "Bedroom",
+        "LivingRoom",
+        "Office",
+        "Industrial",
+        "Suburb",
+        "InsideCity",
+        "TallBuilding",
+        "Street",
+        "Highway",
+        "OpenCountry",
+        "Coast",
+        "Mountain",
+        "Forest",
+    ]
 
     CAT2ID = {v: k for k, v in enumerate(CAT)}
 
@@ -220,5 +281,5 @@ def nearest_neighbor_classify(train_img_feats, train_labels, test_img_feats):
     ###########################################################################
     #                               END OF YOUR CODE                          #
     ###########################################################################
-    
+
     return test_predicts

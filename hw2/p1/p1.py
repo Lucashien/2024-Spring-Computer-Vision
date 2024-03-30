@@ -56,6 +56,7 @@ def main():
         else:
             with open('vocab.pkl', 'rb') as f:
                 vocab = pickle.load(f)
+        
         # train_image_feats
         if os.path.isfile('train_image_feats.pkl') is False:
             train_img_feats = get_bags_of_sifts(train_img_paths, vocab)
