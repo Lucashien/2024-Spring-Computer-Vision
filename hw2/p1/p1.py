@@ -2,7 +2,7 @@ import os
 import argparse
 import pickle
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from glob import glob
 from sklearn.metrics import confusion_matrix
 
@@ -30,7 +30,6 @@ def main():
     parser.add_argument('--classifier', help='classifier', type=str, default='nearest_neighbor')
     parser.add_argument('--dataset_dir', help='dataset directory', type=str, default='../hw2_data/p1_data/')
     args = parser.parse_args()
-
     print('Loading all data paths and labels...')
     train_img_paths, test_img_paths, train_labels, test_labels = get_img_paths_and_labels(args.dataset_dir)
     
@@ -45,6 +44,7 @@ def main():
         train_img_feats = get_tiny_images(train_img_paths)
         test_img_feats = get_tiny_images(test_img_paths)
 
+    
     elif args.feature == 'bag_of_sift':
         # vocab and features is saved to disk to avoid recomputing the vocabulary every time
         if os.path.isfile('vocab.pkl') is False:

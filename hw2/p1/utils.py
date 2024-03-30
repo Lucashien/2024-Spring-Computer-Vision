@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
+import os
 from cyvlfeat.sift.dsift import dsift
 from cyvlfeat.kmeans import kmeans
 from scipy.spatial.distance import cdist
@@ -28,7 +29,7 @@ def get_tiny_images(img_paths):
         1. N is the total number of images
         2. if the images are resized to 16x16, d would be 256
     '''
-    
+
     #################################################################
     # TODO:                                                         #
     # To build a tiny image feature, you can follow below steps:    #
@@ -38,9 +39,13 @@ def get_tiny_images(img_paths):
     #       or you can first crop the center square portion out of  #
     #       each image.                                             #
     #    2. flatten and normalize the resized image.                #
-    #################################################################
-
+    #################################################################    
     tiny_img_feats = []
+    for img_path in img_paths:
+       img = Image.open(img_path)
+       img = img.resize((16,16))
+       flat_img = np.array(img).flatten()
+       tiny_img_feats.append(flat_img)
 
     #################################################################
     #                        END OF YOUR CODE                       #
@@ -96,13 +101,24 @@ def build_vocabulary(img_paths, vocab_size=400):
     #      approximate version of SIFT is about 20 times faster to compute           #
     # You are welcome to use your own SIFT feature                                   #
     ##################################################################################
-
+    features = []
+    for img_path in img_paths:
+        img = np.array(Image.open(img_path))
+        _frames, words = dsift(img, step=[15, 15], fast=True)
+        random_idxes = np.random.choice(len(words), len(words)//2, replace=False)
+        
+        if words is not None:
+            for idx in random_idxes:
+                features.append(words[idx])
+    
+    features = np.array(features).astype('float32')
+    vocab = kmeans(features,num_centers = vocab_size)
+    
     ##################################################################################
     #                                END OF YOUR CODE                                #
     ##################################################################################
     
-    # return vocab
-    return None
+    return vocab
 
 ###### Step 1-b-2
 def get_bags_of_sifts(img_paths, vocab):
