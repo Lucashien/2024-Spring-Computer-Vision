@@ -1,7 +1,8 @@
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
-import os
+
+from collections import Counter
 from cyvlfeat.sift.dsift import dsift
 from cyvlfeat.kmeans import kmeans
 from scipy.spatial.distance import cdist
@@ -121,9 +122,9 @@ def build_vocabulary(img_paths, vocab_size=400):
     features = []
     for img_path in img_paths:
         img = np.array(Image.open(img_path))
-        _frames, descriptors = dsift(img, step=[4, 4], fast=True)
+        _frames, descriptors = dsift(img, step=[1, 1], fast=True)
         random_idxes = np.random.choice(
-            len(descriptors), len(descriptors) // 2, replace=False
+            len(descriptors), len(descriptors), replace=False
         )
 
         if descriptors is not None:
@@ -137,6 +138,7 @@ def build_vocabulary(img_paths, vocab_size=400):
     #                                END OF YOUR CODE                                #
     ##################################################################################
 
+    # 定義了vocab個center of cluster
     return vocab
 
 
@@ -177,11 +179,11 @@ def get_bags_of_sifts(img_paths, vocab):
     ############################################################################
 
     img_feats = []
-    feats = []
 
+    # Note: vocab = group of cluster center
     for img_path in img_paths:
         img = np.array(Image.open(img_path))
-        _frames, descriptors = dsift(img, step=[4, 4], fast=True)
+        _frames, descriptors = dsift(img, step=[1, 1], fast=True)
 
         # 找到descriptors和vocab都是2d矩陣 -> 計算每個點之間的距離
         # 如果descriptors.shape = (10,128), vocab.shpae = (7,128)
@@ -193,10 +195,11 @@ def get_bags_of_sifts(img_paths, vocab):
         # 所以總共會有10個最短距離
         min_dist = np.argmin(dist, axis=1)
 
+        # 求出了10個點的最短距離後，根據最短距離去分群
         # hist = 每個區間有幾個
-        # bin (_)  = 區間 (由vocab決定區間)
+        # bin  = 區間 (由vocab決定區間)
         # 目標：求出每個區間的數量
-        hists, _ = np.histogram(min_dist, bins=len(vocab))
+        hists, _bin = np.histogram(min_dist, bins=len(vocab))
 
         # normalized
         sum = np.sum(hists)
@@ -207,6 +210,7 @@ def get_bags_of_sifts(img_paths, vocab):
     #                                END OF YOUR CODE                          #
     ############################################################################
 
+    # feats -> 每張圖片跟 center of cluster (vocab) 之間的關係
     return np.array(img_feats)
 
 
@@ -275,8 +279,23 @@ def nearest_neighbor_classify(train_img_feats, train_labels, test_img_feats):
     #   2. hint: use 'minkowski' metric for cdist() and use a smaller 'p' may #
     #      work better, or you can also try different metrics for cdist()     #
     ###########################################################################
-
     test_predicts = []
+    k = 5
+    dist = cdist(test_img_feats, train_img_feats)
+    
+    # 看test img離哪k個train img最近
+    # 再由最近的那些train img的 label去投票
+    dist_sort_idxes = np.argsort(dist, axis=1) 
+
+    topk_idxes = dist_sort_idxes[:, :k]
+
+    for topk_idx in topk_idxes:
+        vote = [train_labels[i] for i in topk_idx]
+        vote_result = Counter(vote).most_common(1)[0][0]
+        # print(vote," -> ",vote_result)
+        
+        test_predicts.append(vote_result)
+        
 
     ###########################################################################
     #                               END OF YOUR CODE                          #
