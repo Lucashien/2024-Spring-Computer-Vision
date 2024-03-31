@@ -280,8 +280,8 @@ def nearest_neighbor_classify(train_img_feats, train_labels, test_img_feats):
     #      work better, or you can also try different metrics for cdist()     #
     ###########################################################################
     test_predicts = []
-    k = 5
-    dist = cdist(test_img_feats, train_img_feats)
+    k = 7
+    dist = cdist(test_img_feats, train_img_feats,metric="braycurtis")
     
     # 看test img離哪k個train img最近
     # 再由最近的那些train img的 label去投票
