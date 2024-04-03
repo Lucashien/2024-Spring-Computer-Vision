@@ -54,7 +54,7 @@ def train(
     train_loss_list, val_loss_list = [], []
     train_acc_list, val_acc_list = [], []
     best_acc = 0.0
-    print("Start to train")
+    
     for epoch in range(cfg.epochs):
         ##### TRAINING #####
         train_start_time = time.time()
@@ -70,11 +70,11 @@ def train(
             )
             sys.stdout.flush()
             # Data loading.
-            images, labels = data["images"].to(device), data["labels"].to(
-                device
-            )  # (batch_size, 3, 32, 32), (batch_size)
+            images, labels = data["images"].to(device), data["labels"].to(device)
+            
             # Forward pass. input: (batch_size, 3, 32, 32), output: (batch_size, 10)
             pred = model(images)
+            
             # Calculate loss.
             loss = criterion(pred, labels)
             # Backprop. (update model parameters)
@@ -84,12 +84,14 @@ def train(
             # Evaluate.
             train_correct += torch.sum(torch.argmax(pred, dim=1) == labels)
             train_loss += loss.item()
+
         # Print training result
         train_time = time.time() - train_start_time
         train_acc = train_correct / len(train_loader.dataset)
         train_loss /= len(train_loader)
         train_acc_list.append(train_acc)
         train_loss_list.append(train_loss)
+
         # print()
         # print(
         #     f"[{epoch + 1}/{cfg.epochs}] {train_time:.2f} sec(s) Train Acc: {train_acc:.5f} | Train Loss: {train_loss:.5f}"
@@ -110,6 +112,7 @@ def train(
             # You don't have to update parameters, just record the      #
             # accuracy and loss.                                        #
             #############################################################
+
             for batch, data in tqdm(
                 enumerate(val_loader), total=len(val_loader), desc="Val Batches"
             ):
@@ -119,6 +122,7 @@ def train(
 
                 val_correct += torch.sum(torch.argmax(pred, dim=1) == labels)
                 val_loss += loss.item()
+
             ######################### TODO End ##########################
 
         # Print validation result
@@ -199,7 +203,6 @@ def main():
 
     # Check if GPU is available, otherwise CPU is used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # device = torch.device('cpu')
     print("Device:", device)
 
     ##### MODEL #####
