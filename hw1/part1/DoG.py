@@ -52,8 +52,6 @@ class Difference_of_Gaussian(object):
                 # Step 2: Subtract 2 neighbor images to get DoG images (4 images per octave, 2 octave in total)
                 # - Function: cv2.subtract(second_image, first_image)
                 dog_img = cv2.subtract(gaussian_imgs[i], gaussian_imgs[i - 1])
-                # dog_img = normalize(dog_img)
-
                 dog_imgs.append(dog_img)
                 cv2.imwrite(image_path, normalize(dog_img))
 
@@ -62,8 +60,8 @@ class Difference_of_Gaussian(object):
         keypoints = []
         for i in range(1, len(dog_imgs)):
             if i == 1 or i == 2 or i == 5 or i == 6:
-                for row in range(1, dog_imgs[i].shape[0]):
-                    for col in range(1, dog_imgs[i].shape[1]):
+                for row in range(1, dog_imgs[i].shape[0]-1):
+                    for col in range(1, dog_imgs[i].shape[1]-1):
                         max = np.max(
                             [
                                 dog_imgs[i + 1][row - 1 : row + 2, col - 1 : col + 2],
@@ -79,11 +77,16 @@ class Difference_of_Gaussian(object):
                                 dog_imgs[i - 1][row - 1 : row + 2, col - 1 : col + 2],
                             ]
                         )
- 
+
+                        
+                        
                         if max > self.threshold and max == dog_imgs[i][row][col]:
+                            # print([row * (i//5+1), col * (i//5+1)],"->",dog_imgs[i][row][col])
                             keypoints.append([row * (i//5+1), col * (i//5+1)])
                         if abs(min) > self.threshold and abs(min) == abs(dog_imgs[i][row][col]):
                             keypoints.append([row * (i//5+1), col * (i//5+1)])
+                            # print([row * (i//5+1), col * (i//5+1)],"->",dog_imgs[i][row][col])
+
 
         keypoints =np.unique(np.array(keypoints),axis = 0)
         

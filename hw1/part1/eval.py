@@ -11,8 +11,8 @@ from DoG import Difference_of_Gaussian
 def main():
     parser = argparse.ArgumentParser(description = 'evaluation function of Difference of Gaussian')
     parser.add_argument('--threshold', default = 3.0, type=float, help = 'threshold value for feature selection')
-    parser.add_argument('--image_path', default = './testdata/1.png', help = 'path to input image')
-    parser.add_argument('--gt_path', default = './testdata/1_gt.npy', help = 'path to ground truth .npy')
+    parser.add_argument('--image_path', default = './testdata/2.png', help = 'path to input image')
+    parser.add_argument('--gt_path', default = './testdata/2_gt.npy', help = 'path to ground truth .npy')
     args = parser.parse_args()
 
     img = cv2.imread(args.image_path, 0).astype(np.float64)
