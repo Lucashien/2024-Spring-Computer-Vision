@@ -92,11 +92,6 @@ def train(
         train_acc_list.append(train_acc)
         train_loss_list.append(train_loss)
 
-        # print()
-        # print(
-        #     f"[{epoch + 1}/{cfg.epochs}] {train_time:.2f} sec(s) Train Acc: {train_acc:.5f} | Train Loss: {train_loss:.5f}"
-        # )
-
         ##### VALIDATION #####
         model.eval()
         with torch.no_grad():
@@ -219,6 +214,12 @@ def main():
 
     model.to(device)
 
+    def count_parameters(model):
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    total_params = count_parameters(model)
+    print(f'{cfg.model_type} Total number of parameters: {total_params}')
+    
     ##### DATALOADER #####
     ##### TODO: check dataset.py #####
     train_loader = get_dataloader(

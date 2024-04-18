@@ -7,34 +7,40 @@ class MyNet(nn.Module):
     def __init__(self):
         super(MyNet, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
-        self.relu = nn.ReLU()
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.conv2 = nn.Conv2d(
-            in_channels=32, out_channels=64, kernel_size=3, padding=1
+        self.conv1 = nn.Sequential(
+		    nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5, 5)),
+		    nn.ReLU(),
+		    nn.MaxPool2d(kernel_size=3, stride=3),
+		    nn.BatchNorm2d(num_features=32),
+		)
+		
+        self.conv2 = nn.Sequential(
+		    nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3)),
+		    nn.ReLU(),
+		    nn.MaxPool2d(kernel_size=3, stride=3),
+			nn.BatchNorm2d(num_features=64),
+		)
+        
+        self.fc1 = nn.Sequential(
+			nn.Linear(in_features=256, out_features=128),
+			nn.ReLU()
         )
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.fc1 = nn.Linear(in_features=200704, out_features=128)
-        self.fc2 = nn.Linear(in_features=128, out_features=50)  # 50類
         
+        self.fc2 = nn.Sequential(
+			nn.Linear(in_features=128, out_features=10),
+			nn.ReLU(),
+		)
+        
+        self.drop_out = nn.Dropout2d(p=0.25)
         self.flatten = nn.Flatten()
-        self.drop25 = nn.Dropout2d(0.25)
-        
         self.loss = nn.CrossEntropyLoss()
 
     def forward(self, x):
         x = self.conv1(x)
-        x = self.relu(x)
-        x = self.pool1(x)
-
         x = self.conv2(x)
-        x = self.relu(x)
-        x = self.pool2(x)
-
+        
         x = self.flatten(x) # .view(x.size(0), -1)  # 展平特徵圖
-        x = self.fc1(x)
+        x = self.drop_out(self.fc1(x))
         x = self.fc2(x)
 
         return x

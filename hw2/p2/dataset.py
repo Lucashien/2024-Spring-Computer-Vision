@@ -9,7 +9,6 @@ from PIL import Image
 
 
 def get_dataloader(dataset_dir, batch_size=1, split="test"):
-    print("get dataloader")
     ###############################
     # TODO:                       #
     # Define your own transforms. #
@@ -23,8 +22,8 @@ def get_dataloader(dataset_dir, batch_size=1, split="test"):
     if split == "train":
         transform = transforms.Compose(
             [
-                transforms.Resize(size=256, interpolation=transforms.InterpolationMode.BILINEAR),
-                transforms.CenterCrop(size=224),
+                transforms.Resize(size=32, interpolation=transforms.InterpolationMode.BILINEAR),
+                # transforms.CenterCrop(size=224),
                 ##### TODO: Data Augmentation Begin #####
                 transforms.RandomChoice(basic_transform),
                 ##### TODO: Data Augmentation End #####
@@ -37,8 +36,8 @@ def get_dataloader(dataset_dir, batch_size=1, split="test"):
     else:  # 'val' or 'test'
         transform = transforms.Compose(
             [
-                transforms.Resize(size=256, interpolation=transforms.InterpolationMode.BILINEAR),
-                transforms.CenterCrop(size=224),
+                transforms.Resize(size=32, interpolation=transforms.InterpolationMode.BILINEAR),
+                # transforms.CenterCrop(size=224),
                 # we usually don't apply data augmentation on test or val data
                 transforms.ToTensor(),
                 transforms.Normalize(
@@ -100,12 +99,12 @@ class CIFAR10Dataset(Dataset):
         ########################################################
         path = os.path.join(self.dataset_dir, self.image_names[index])
         img = Image.open(path)
-        label = self.labels[index]
 
         if self.transform:
             img = self.transform(img)
 
         if self.split != "test":
+            label = self.labels[index]
             return {"images": img, "labels": label}
         else:
             return {"images": img}

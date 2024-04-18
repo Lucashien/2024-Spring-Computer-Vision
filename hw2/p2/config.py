@@ -9,6 +9,7 @@ exp_name   = 'sgd_pre_da' # name of experiment
 
 # Model Options
 model_type = 'mynet' # 'mynet' or 'resnet18'
+# model_type = 'resnet18' # 'mynet' or 'resnet18'
 
 # Learning Options
 epochs     = 50           # train how many epochs
