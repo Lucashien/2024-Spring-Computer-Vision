@@ -17,6 +17,7 @@ def transform(img, canvas, corners):
                   [w, h],
                   [0, h]
                   ])
+
     H = solve_homography(x, corners)
     
     return  warping(img, canvas, H, 0, h, 0, w, direction='f')

@@ -11,21 +11,36 @@ def solve_homography(u, v):
     """
     N = u.shape[0]
     H = None
+    A = []
 
     if v.shape[0] is not N:
-        print('u and v should have the same size')
+        print("u and v should have the same size")
         return None
     if N < 4:
-        print('At least 4 points should be given')
+        print("At least 4 points should be given")
 
     # TODO: 1.forming A
-
+    # 實現 Ah = 0
+    # 1. ux, uy, 1, 0, 0, 0, -uxvx, -uyvx, -vx
+    # 2. 0, 0, 0, ux, uy, 1, -uxvy, -uyvy, -vy
+    # ux = u[i][0], uy = u[i][1]
+    # vx = v[i][0], vy = v[i][1]
+    
+    for i in range(N):
+        A.append([u[i][0], u[i][1], 1, 0, 0, 0, -u[i][0]*v[i][0], -u[i][1]*v[i][0], -v[i][0]])
+        A.append([0, 0, 0, u[i][0], u[i][1], 1, -u[i][0]*v[i][1], -u[i][1]*v[i][1], -v[i][1]])
+    
+    A = np.array(A)
+    _u,_s,v_t = np.linalg.svd(A)
+    
     # TODO: 2.solve H with A
+    # let h be the last column of V
+    H = v_t[-1, :]
+    
+    return H.reshape(3,3)
 
-    return H
 
-
-def warping(src, dst, H, ymin, ymax, xmin, xmax, direction='b'):
+def warping(src, dst, H, ymin, ymax, xmin, xmax, direction="b"):
     """
     Perform forward/backward warpping without for loops. i.e.
     for all pixels in src(xmin~xmax, ymin~ymax),  warp to destination
@@ -66,7 +81,7 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction='b'):
 
     # TODO: 2.reshape the destination pixels as N x 3 homogeneous coordinate
 
-    if direction == 'b':
+    if direction == "b":
         # TODO: 3.apply H_inv to the destination pixels and retrieve (u,v) pixels, then reshape to (ymax-ymin),(xmax-xmin)
 
         # TODO: 4.calculate the mask of the transformed coordinate (should not exceed the boundaries of source image)
@@ -77,7 +92,7 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction='b'):
 
         pass
 
-    elif direction == 'f':
+    elif direction == "f":
         # TODO: 3.apply H to the source pixels and retrieve (u,v) pixels, then reshape to (ymax-ymin),(xmax-xmin)
 
         # TODO: 4.calculate the mask of the transformed coordinate (should not exceed the boundaries of destination image)
@@ -88,4 +103,4 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction='b'):
 
         pass
 
-    return dst 
+    return dst
