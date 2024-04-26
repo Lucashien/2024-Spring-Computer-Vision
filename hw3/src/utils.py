@@ -31,11 +31,14 @@ def solve_homography(u, v):
         A.append([0, 0, 0, u[i][0], u[i][1], 1, -u[i][0]*v[i][1], -u[i][1]*v[i][1], -v[i][1]])
     
     A = np.array(A)
+    # print(f"\nAppend A:\n{A}")
     _u,_s,v_t = np.linalg.svd(A)
-    
+    # print(f"\nDoing svd...\n{v_t}")
+
     # TODO: 2.solve H with A
     # let h be the last column of V
     H = v_t[-1, :]
+    # print(H)
     
     return H.reshape(3,3)
 
@@ -75,21 +78,43 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction="b"):
 
     h_src, w_src, ch = src.shape
     h_dst, w_dst, ch = dst.shape
-    H_inv = np.linalg.inv(H)
+    H_inv = np.linalg.inv(H) # 在solve_homography中得到的H矩陣
 
     # TODO: 1.meshgrid the (x,y) coordinate pairs
-
+    x = np.arange(0, w_dst, 1)
+    y = np.arange(0, h_dst, 1)
+    xx, yy = np.meshgrid(x, y) # w*h, w*h
+    xx, yy = xx.flatten()[:, np.newaxis], yy.flatten()[:, np.newaxis]
+    
+    
     # TODO: 2.reshape the destination pixels as N x 3 homogeneous coordinate
+    ones = np.ones((len(xx), 1)) # N
+    des_coor = np.concatenate((xx, yy, ones), axis=1).astype(np.int) # N*3, 3 means (x,y,1)
 
-    if direction == "b":
+    if direction == "f":
         # TODO: 3.apply H_inv to the destination pixels and retrieve (u,v) pixels, then reshape to (ymax-ymin),(xmax-xmin)
-
+        # H_inv = 3*3
+        # des_coor = N*3
+        # H_inv dot des_coor = 3*N -> trans to N*3
+        r_pixel = H_inv.dot(des_coor.T).T # 把
+        
         # TODO: 4.calculate the mask of the transformed coordinate (should not exceed the boundaries of source image)
-
+        r_pixel[:, :2] = r_pixel[:, :2] / r_pixel[:, 2][:, np.newaxis]
+        valid_mask = (r_pixel[:, 0] >= 0) & (r_pixel[:, 0] < w_src) & (r_pixel[:, 1] >= 0) & (r_pixel[:, 1] < h_src)
+        out_boundary = np.where(~valid_mask)[0]
+        
         # TODO: 5.sample the source image with the masked and reshaped transformed coordinates
-
+        if len(out_boundary):
+            r_pixel = np.delete(r_pixel, out_boundary, 0)
+            des_coor = np.delete(des_coor, out_boundary, 0)
+        
         # TODO: 6. assign to destination image with proper masking
-
+        tx = r_pixel[:, 0].astype(np.int)
+        ty = r_pixel[:, 1].astype(np.int)
+        dx = r_pixel[:, 0] - tx
+        dy = r_pixel[:, 1] - ty
+        
+        
         pass
 
     elif direction == "f":
