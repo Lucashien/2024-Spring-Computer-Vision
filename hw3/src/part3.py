@@ -12,13 +12,20 @@ if __name__ == '__main__':
     corners2 = np.array([[346, 196], [437, 161], [483, 198], [397, 229]])
     h, w, c = (500, 500, 3)
     
+    x = np.array([[0, 0],
+                  [w, 0],
+                  [w, h],
+                  [0, h]
+                  ])
 
     # TODO: call solve_homography() & warping
     dst = np.zeros((h, w, c))
-    output3_1 = None
+    H1 = solve_homography(corners1, x)
+    output3_1 = warping(secret1, dst, H1, direction='b')
     
     dst = np.zeros((h, w, c))
-    output3_2 = None 
+    H2 = solve_homography(corners2, x)
+    output3_2 = warping(secret2, dst, H2, direction='b') 
 
     cv2.imwrite('output3_1.png', output3_1)
     cv2.imwrite('output3_2.png', output3_2)
