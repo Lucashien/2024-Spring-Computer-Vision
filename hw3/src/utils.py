@@ -43,7 +43,7 @@ def solve_homography(u, v):
     return H.reshape(3,3)
 
 
-def warping(src, dst, H, ymin, ymax, xmin, xmax, direction="b"):
+def warping(src, dst, H,direction="b"):
     """
     Perform forward/backward warpping without for loops. i.e.
     for all pixels in src(xmin~xmax, ymin~ymax),  warp to destination
@@ -80,12 +80,8 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction="b"):
     H_inv = np.linalg.inv(H) # 在solve_homography中得到的H矩陣
 
     # TODO: 1.meshgrid the (x,y) coordinate pairs
-    if direction == "b":
-        w = w_dst - 1 
-        h = h_dst - 1 
-    elif direction == "f":
-        w = w_src - 1
-        h = h_src - 1
+    w = w_dst - 1 if direction == "b" else w_src - 1
+    h = h_dst - 1 if direction == "b" else h_src - 1
     
     x = np.arange(0, w, 1)
     y = np.arange(0, h, 1)
@@ -102,15 +98,33 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction="b"):
     
     if direction == "b":
         # TODO: 3.apply H_inv to the destination pixels and retrieve (u,v) pixels, then reshape to (ymax-ymin),(xmax-xmin)
+        mapping_pixel = H_inv.dot(des_coor.T).T
         
         # TODO: 4.calculate the mask of the transformed coordinate (should not exceed the boundaries of source image)
-       
-        
+        mapping_pixel[:, :2] = mapping_pixel[:, :2] / mapping_pixel[:, 2][:, np.newaxis]
+        valid_mask = (mapping_pixel[:, 0] >= 0) & (mapping_pixel[:, 0] < w_src - 1) & (mapping_pixel[:, 1] >= 0) & (mapping_pixel[:, 1] < h_src - 1)
+        out_boundary = np.where(~valid_mask)[0]
+
         # TODO: 5.sample the source image with the masked and reshaped transformed coordinates
-        
+        if len(out_boundary):
+            mapping_pixel = np.delete(mapping_pixel, out_boundary, 0)
+            des_coor = np.delete(des_coor, out_boundary, 0)
         
         # TODO: 6. assign to destination image with proper masking
-        pass
+        tx = mapping_pixel[:, 0].astype(np.int)
+        ty = mapping_pixel[:, 1].astype(np.int)
+        dx = mapping_pixel[:, 0] - tx
+        dy = mapping_pixel[:, 1] - ty
+ 
+        a = (1 - dx) * (1 - dy)
+        b = dx * (1 - dy)
+        c = dx * dy
+        d = (1 - dx) * dy        
+        
+        warped[des_coor[:, 1], des_coor[:, 0]] = (a[:, np.newaxis] * src[ty, tx] +
+                          b[:, np.newaxis] * src[ty, tx+1] +
+                          c[:, np.newaxis] * src[ty+1, tx+1] +
+                          d[:, np.newaxis] * src[ty+1, tx])
         
     elif direction == "f":
         # TODO: 3.apply H to the source pixels and retrieve (u,v) pixels, then reshape to (ymax-ymin),(xmax-xmin)
@@ -121,9 +135,7 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction="b"):
 
         # TODO: 4.calculate the mask of the transformed coordinate (should not exceed the boundaries of destination image)
         mapping_pixel[:, :2] = mapping_pixel[:, :2] / mapping_pixel[:, 2][:, np.newaxis]
-        valid_mask = (mapping_pixel[:, 0] >= 0) & (mapping_pixel[:, 0] < w_dst) & (mapping_pixel[:, 1] >= 0) & (mapping_pixel[:, 1] < h_dst)
-        
-
+        valid_mask = (mapping_pixel[:, 0] >= 0) & (mapping_pixel[:, 0] < w_dst - 1) & (mapping_pixel[:, 1] >= 0) & (mapping_pixel[:, 1] < h_dst - 1)
         out_boundary = np.where(~valid_mask)[0]
         
         # TODO: 5.filter the valid coordinates using previous obtained mask
@@ -145,9 +157,8 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction="b"):
         
         x_floor = des_coor[:, 0]
         y_floor = des_coor[:, 1]
-        x_ceil = np.clip(x_floor + 1, 0, w_src - 1)
-        y_ceil = np.clip(y_floor + 1, 0, h_src - 1)
-
+        x_ceil = np.clip(x_floor + 1, 0, w_dst - 1)
+        y_ceil = np.clip(y_floor + 1, 0, h_dst - 1)
         
         warped[ty, tx] = (a[:, np.newaxis] * src[y_floor, x_floor] +
                           b[:, np.newaxis] * src[y_floor, x_ceil] +

@@ -17,7 +17,7 @@ def planarAR(REF_IMAGE_PATH, VIDEO_PATH):
     film_h, film_w = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     film_fps = video.get(cv2.CAP_PROP_FPS)
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    videowriter = cv2.VideoWriter("output2.avi", fourcc, film_fps, (film_w, film_h))
+    videowriter = cv2.VideoWriter("output2.mp4", fourcc, film_fps, (film_w, film_h))
     arucoDict = aruco.Dictionary_get(aruco.DICT_4X4_50)
     arucoParameters = aruco.DetectorParameters_create()
     ref_corns = np.array([[0, 0], [w, 0], [w, h], [0, h]])
@@ -29,13 +29,19 @@ def planarAR(REF_IMAGE_PATH, VIDEO_PATH):
         if ret:  ## check whethere the frame is legal, i.e., there still exists a frame
             # TODO: 1.find corners with aruco
             # function call to aruco.detectMarkers()
-
+            corners, _, _ = cv2.aruco.detectMarkers(frame, arucoDict, parameters=arucoParameters)
+            corners = np.array(corners[0][0])
+            # print(corners)
+            
             # TODO: 2.find homograpy
             # function call to solve_homography()
-
+            H = solve_homography(ref_corns, corners)
+            
             # TODO: 3.apply backward warp
             # function call to warping()
-
+            frame = warping(ref_image, frame, H, direction='b')
+            
+            
             videowriter.write(frame)
             pbar.update(1)
 
