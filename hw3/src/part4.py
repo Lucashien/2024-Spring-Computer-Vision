@@ -18,8 +18,8 @@ def matches(im1, im2):
     # Filtering the match_points
     f_match_points = [m1 for m1,m2 in match_points if m1.distance < 0.8 * m2.distance]
 
-    f_kp1 = [kp1[mp.queryIdx].pt for mp in f_match_points]
-    f_kp2 = [kp2[mp.queryIdx].pt for mp in f_match_points]
+    f_kp1 = [kp1[mp.queryIdx].pt for mp in f_match_points] # src 圖像
+    f_kp2 = [kp2[mp.trainIdx].pt for mp in f_match_points] # 對照的圖像
     
     f_kp1 = np.array(f_kp1).astype(int)
     f_kp2 = np.array(f_kp2).astype(int)
@@ -46,7 +46,7 @@ def get_outlier(H, mps1, mps2):
     for d in dst:
         if d > 3:
             outliers_count += 1
-    print(outliers_count)
+    
     return outliers_count
 
 
@@ -62,7 +62,6 @@ def ransac(mps1,mps2):
         if outliers_count < lowest_outlier:
             best_H = H
             lowest_outlier = outliers_count
-
     return best_H
 
 def panorama(imgs):
@@ -86,7 +85,7 @@ def panorama(imgs):
 
         # TODO: 1.feature detection & matching
         matchpoints1, matchpoints2 = matches(im1,im2)
-        
+
         # TODO: 2. apply RANSAC to choose best H
         H = ransac(matchpoints1, matchpoints2)
         
