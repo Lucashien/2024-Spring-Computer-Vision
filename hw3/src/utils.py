@@ -27,13 +27,13 @@ def solve_homography(u, v):
     # vx = v[i][0], vy = v[i][1]
     
     for i in range(N):
-        A.append([u[i][0], u[i][1], 1, 0, 0, 0, -u[i][0]*v[i][0], -u[i][1]*v[i][0], -v[i][0]])
-        A.append([0, 0, 0, u[i][0], u[i][1], 1, -u[i][0]*v[i][1], -u[i][1]*v[i][1], -v[i][1]])
+        row1 = [u[i][0], u[i][1], 1, 0, 0, 0, -u[i][0]*v[i][0], -u[i][1]*v[i][0], -v[i][0]]
+        row2 = [0, 0, 0, u[i][0], u[i][1], 1, -u[i][0]*v[i][1], -u[i][1]*v[i][1], -v[i][1]]
+        A.append(row1)
+        A.append(row2)
     
     A = np.array(A)
-    # print(f"\nAppend A:\n{A}")
     _u,_s,v_t = np.linalg.svd(A)
-    # print(f"\nDoing svd...\n{v_t}")
 
     # TODO: 2.solve H with A
     # let h be the last column of V
