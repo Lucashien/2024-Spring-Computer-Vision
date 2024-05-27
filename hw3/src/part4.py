@@ -55,7 +55,7 @@ def ransac(mps1,mps2):
     outliers_count = 0
     lowest_outlier = all_matches
     
-    for i in range(10):
+    for i in range(150):
         rand_index = np.random.choice(all_matches, 5, replace=False)
         H = solve_homography(mps2[rand_index], mps1[rand_index])
         outliers_count = get_outlier(H, mps1, mps2)

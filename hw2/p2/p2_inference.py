@@ -80,6 +80,7 @@ def main():
         for data in test_loader:
             images = data["images"].to(device)
             pred = model(images)
+            pred = torch.max(pred, 1)[1].item()
             predictions.append(pred)
 
     test_time = time.time() - test_start_time

@@ -84,7 +84,7 @@ def train(
             # Evaluate.
             train_correct += torch.sum(torch.argmax(pred, dim=1) == labels)
             train_loss += loss.item()
-
+        
         # Print training result
         train_time = time.time() - train_start_time
         train_acc = train_correct / len(train_loader.dataset)
@@ -231,15 +231,17 @@ def main():
 
     ##### LOSS & OPTIMIZER #####
     criterion = nn.CrossEntropyLoss()
+    
     if cfg.use_adam:
-        optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr)
     else:
         optimizer = torch.optim.SGD(
             model.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=1e-6
         )
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        optimizer, milestones=cfg.milestones, gamma=0.1
-    )
+    # scheduler = torch.optim.lr_scheduler.MultiStepLR(
+    #     optimizer, milestones=cfg.milestones, gamma=0.1
+    # )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=25, eta_min=0)
 
     ##### TRAINING & VALIDATION #####
     ##### TODO: check train() in this file #####
