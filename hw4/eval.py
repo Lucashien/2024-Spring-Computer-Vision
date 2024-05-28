@@ -33,19 +33,24 @@ def main():
               'Teddy':   (60, 4),
               'Cones':   (60, 4)}
 
-    print('Processing image %s ...'%args.image)
-    t0 = time.time()
-    img_left = cv2.imread(os.path.join(args.dataset_path, args.image, 'img_left.png'))
-    img_right = cv2.imread(os.path.join(args.dataset_path, args.image, 'img_right.png'))
-    max_disp, scale_factor = config[args.image]
-    labels = computeDisp(img_left, img_right, max_disp)
-    print('[Time] %.4f sec' % (time.time()-t0))
+    for i in range(1,30):
+        for j in range(1,30):
+            for k in range(1,30):
+                print('Processing image %s ...'%args.image)
+                t0 = time.time()
+                img_left = cv2.imread(os.path.join(args.dataset_path, args.image, 'img_left.png'))
+                img_right = cv2.imread(os.path.join(args.dataset_path, args.image, 'img_right.png'))
+                max_disp, scale_factor = config[args.image]
+    
+                labels = computeDisp(img_left, img_right, max_disp,i,j,k)
+                print('[Time] %.4f sec' % (time.time()-t0))
 
-    if glob.glob(os.path.join(args.dataset_path, args.image, 'disp_gt.*')):
-        gt_path = glob.glob(os.path.join(args.dataset_path, args.image, 'disp_gt.*'))[0]
-        img_gt = cv2.imread(gt_path, -1)
-        error = evaluate(labels, img_gt, scale_factor)
-        print('[Bad Pixel Ratio] %.2f%%' % (error*100))
+                if glob.glob(os.path.join(args.dataset_path, args.image, 'disp_gt.*')):
+                    gt_path = glob.glob(os.path.join(args.dataset_path, args.image, 'disp_gt.*'))[0]
+                    img_gt = cv2.imread(gt_path, -1)
+                    error = evaluate(labels, img_gt, scale_factor)
+                    print(f"i,j,k = {i},{j},{k}")
+                    print('[Bad Pixel Ratio] %.2f%%' % (error*100))
 
 
 if __name__ == '__main__':
