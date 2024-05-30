@@ -17,7 +17,7 @@ def apply_threshold(Image_window, middle_value):
     return Image_window
 
 
-def computeDisp(Il, Ir, max_disp,aa,bb,cc):
+def computeDisp(Il, Ir, max_disp):
     h, w, ch = Il.shape
     labels = np.zeros((h, w), dtype=np.float32)
     Il = Il.astype(np.float32)
@@ -92,8 +92,8 @@ def computeDisp(Il, Ir, max_disp,aa,bb,cc):
                 cost_R[i, j, :] = disparity
     
     for d in range(max_disp):
-        cost_L[:, :, d] = xip.jointBilateralFilter(Il, cost_L[:, :, d], aa, bb, bb)
-        cost_R[:, :, d] = xip.jointBilateralFilter(Ir, cost_R[:, :, d], aa, bb, bb)  
+        cost_L[:, :, d] = xip.jointBilateralFilter(Il, cost_L[:, :, d], 16, 12, 12)
+        cost_R[:, :, d] = xip.jointBilateralFilter(Ir, cost_R[:, :, d], 16, 12, 12)  
 
     # >>> Disparity Refinement
     # TODO: Do whatever to enhance the disparity map
@@ -123,6 +123,6 @@ def computeDisp(Il, Ir, max_disp,aa,bb,cc):
                 
                 win_L[i, j] = min(FL, FR)
 
-    labels = xip.weightedMedianFilter(Il.astype(np.uint8), win_L.astype(np.uint8), cc, 1)
+    labels = xip.weightedMedianFilter(Il.astype(np.uint8), win_L.astype(np.uint8), 11, 1)
     return labels.astype(np.uint8)
     
