@@ -24,21 +24,21 @@ $ ./test.sh
 # Directory architecture
 
 |----- gt
-    |----- 000.png
-    |----- ...
-    |----- 128.png
+      |----- 000.png
+      |----- ...
+      |----- 128.png
 
 |----- homography
-    |----- 001_L.npy
-    |----- 001_R.npy
-    |----- ...
-    |----- 128_L.npy
-    |----- 128_R.npy
+      |----- 001_L.npy
+      |----- 001_R.npy
+      |----- ...
+      |----- 128_L.npy
+      |----- 128_R.npy
 
 |----- solution
-    |----- 001.png, s_001.txt, m_001.txt, H1_001.npy, H2_001.npy
-    |----- ...
-    |----- 128.png, s_128.txt, m_128.txt, H1_128.npy, H2_128.npy
+      |----- 001.png, s_001.txt, m_001.txt, H1_001.npy, H2_001.npy
+      |----- ...
+      |----- 128.png, s_128.txt, m_128.txt, H1_128.npy, H2_128.npy
 
 |----- eval.py, functions.py, gen_frame.py
 
