@@ -1,0 +1,1 @@
+python3 eval.py -s /path/to/solution -g /path/to/ground_truth

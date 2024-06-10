@@ -1,0 +1,2 @@
+PSNR: 54.5476
+Complexity:0

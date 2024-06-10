@@ -1,0 +1,1 @@
+python3 gen_frame.py -s /path/to/save/solution -g /path/to/ground_truth -st 0 -end 128
